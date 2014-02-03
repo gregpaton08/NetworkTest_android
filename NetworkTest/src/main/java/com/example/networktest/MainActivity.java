@@ -30,10 +30,12 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
 
 public class MainActivity extends Activity {
 
-    PlaceholderFragment frag;
     TextView tv;
 
     @Override
@@ -46,55 +48,71 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        frag = new PlaceholderFragment();
         if (savedInstanceState == null) {
             getFragmentManager().beginTransaction()
-                    .add(R.id.container, frag)
+                    .add(R.id.container, new PlaceholderFragment())
                     .commit();
         }
 
-        TextView tv = new TextView(getApplicationContext());
+        tv = new TextView(getApplicationContext());
         tv.setText("Hello");
-        tv.setId(274);
         ((FrameLayout) findViewById(R.id.container)).addView(tv);
     }
 
-    private class BackgroundTask extends AsyncTask<URL, Integer, String> {
-        protected String doInBackground(URL... urls) {
-            Log.w("NetworkTest", "Thread called");
-            //return "Hi";
+    // Callback for Send button
+    public void onClickSend(View view) {
+        Log.w("NetworkText", "Send");
+        if (null != tv) {
+            tv.setText("Send");
+        }
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            BackgroundTaskParams btp = new BackgroundTaskParams("192.168.0.31", 12345);
+            new BackgroundTask().execute(btp);
+        } else {
+            Log.w("NetworkTest", "Network unavailable");
+        }
+    }
+
+    private  class BackgroundTaskParams {
+        String m_ipAddress;
+        int m_port;
+
+        public BackgroundTaskParams() {
+            m_ipAddress = "";
+            m_port = 0;
+        }
+
+        public BackgroundTaskParams(String ipAddress, int port) {
+            m_ipAddress = ipAddress;
+            m_port = port;
+        }
+    }
+
+    private class BackgroundTask extends AsyncTask<BackgroundTaskParams, Integer, String> {
+        protected String doInBackground(BackgroundTaskParams... btps) {
             try {
-                Log.w("NetworkTest", "Try");
-//                HttpURLConnection urlConnection = (HttpURLConnection) urls[0].openConnection();
-//
-//
-//                Log.w("NetworkTest", "URL Conn");
-//                urlConnection.setDoOutput(true);
-//                urlConnection.setChunkedStreamingMode(0);
+                // Open socket to server
+                Socket client = new Socket(btps[0].m_ipAddress, btps[0].m_port);
 
-                Socket client = new Socket("192.168.0.31", 12345);
-                PrintWriter printwriter = new PrintWriter(client.getOutputStream(), true);
-
-                Log.w("NetworkTest", "Input Stream");
+                // Get input and output streams
                 InputStream in = client.getInputStream();
-                //InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-                Log.w("NetworkTest", "Output Stream");
                 OutputStream out = client.getOutputStream();
-                //OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
-                Log.w("NetworkTest", "PostStreams");
 
                 byte[] sendStr = new byte[2];
                 sendStr[0] = '4';
                 sendStr[1] = 0;
-                Log.w("NetworkTest", "PreWrite");
                 out.write(sendStr);
-                Log.w("NetworkTest", "PostWrite");
                 byte[] buf = new byte[64];
                 buf[0] = 0;
-                Log.w("NetworkTest", "PreRead");
-                in.read(buf);
-                Log.w("NetworkTest", new String(buf));
-                return new String(buf);
+                int count = in.read(buf);
+                buf[count] = '\0';
+                Charset charset = Charset.forName("UTF-8");
+                String weather = new String(buf, 0, count, charset);
+                Log.w("NetworkTest", weather);
+                return weather;
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -111,57 +129,12 @@ public class MainActivity extends Activity {
 
         }
 
+        @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            Log.w("NetworkTest", String.format("%s", result));
-            //tv.setText(result);
-            if (null == tv) {
-                tv = (TextView)findViewById(274);
-                if (null != tv) {
-                    tv.setText("Thread");
-                    ;;tv.setText(result);
-                }
+            if (null != tv) {
+                tv.setText(result);
             }
-        }
-    }
-
-    // Callback for Send button
-    public void onClickSend(View view) {
-        Log.w("NetworkText", "Send");
-        if (null == tv) {
-            tv = (TextView)findViewById(274);
-            if (null != tv)
-                tv.setText("Send");
-        }
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            try {
-                URL url = new URL("http://192.168.0.31:12345");
-
-                new BackgroundTask().execute(url);
-//                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-//
-//                urlConnection.setDoOutput(true);
-//                urlConnection.setChunkedStreamingMode(0);
-
-//                InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-//                OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
-//
-//                byte[] sendStr = new byte[2];
-//                sendStr[0] = '4';
-//                sendStr[1] = 0;
-//                //out.write(sendStr);
-//                byte[] buf = new byte[64];
-//                //in.read(buf);
-//                //Log.w("NetworkTest", String.format("%s", buf));
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            Log.w("NetworkTest", "Network unavailable");
         }
     }
 
@@ -179,12 +152,6 @@ public class MainActivity extends Activity {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
             return rootView;
-        }
-
-        public void changeText(String str) {
-            TextView mTextView;
-            //mTextView = (TextView)getView().findViewById(R.id.tv_temp);
-            //mTextView.setText(str);
         }
     }
 
