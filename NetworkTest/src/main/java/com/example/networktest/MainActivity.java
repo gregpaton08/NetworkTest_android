@@ -117,7 +117,7 @@ public class MainActivity extends Activity {
                 e.printStackTrace();
             }
 
-            return errorTempString;
+            return "fail";
         }
 
         protected void onProgressUpdate(Integer... progress) {
@@ -131,29 +131,33 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            m_mainFragment.setInTemp(new String().valueOf(parseForInTemp(result)));
-            m_mainFragment.setOutTemp(new String().valueOf(parseForOutTemp(result)));
+            log(result);
+            m_mainFragment.setInTemp(parseForInTemp(result));
+            m_mainFragment.setOutTemp(parseForOutTemp(result));
         }
     }
 
-    float parseForInTemp(String tempStr) {
-        float temp = errorTemp;
+    int parseForInTemp(String tempStr) {
+        int temp = errorTemp;
         try {
-            if (errorTempString != tempStr)
-                temp = Float.parseFloat(tempStr.substring(tempStr.indexOf("IT=") + 3,
-                                                          tempStr.length() - 1));
+            if (false == tempStr.equals("fail")) {
+                // TODO: Remove junk from end of string and remove '- 1' from subString()
+                temp = (int) (Float.parseFloat(tempStr.substring(tempStr.indexOf("IT=") + 3,
+                        tempStr.length() - 1)) * 10.0);
+            }
         } catch (NumberFormatException nfe) {
             nfe.printStackTrace();
         }
         return temp;
     }
 
-    float parseForOutTemp(String tempStr) {
-        float temp = errorTemp;
+    int parseForOutTemp(String tempStr) {
+        int temp = errorTemp;
         try {
-            if (errorTempString != tempStr)
-                temp = Float.parseFloat(tempStr.substring(tempStr.indexOf("OT=") + 3,
-                                                          tempStr.indexOf("IT=") - 1));
+            if (false == tempStr.equals("fail")) {
+                temp = (int)(Float.parseFloat(tempStr.substring(tempStr.indexOf("OT=") + 3,
+                        tempStr.indexOf("IT="))) * 10);
+            }
         } catch (NumberFormatException nfe) {
             nfe.printStackTrace();
         }
@@ -184,15 +188,16 @@ public class MainActivity extends Activity {
             return "";
         }
 
-        public void setInTemp(String tmp) {
+        public void setInTemp(float tmp) {
             TextView inTemp = (TextView)getView().findViewById(R.id.tv_inTemp);
             boolean enable = false;
+            String tmpStr = new String().valueOf((float)tmp / 10.0);
             if (null != inTemp) {
-                if (errorTempString == tmp) {
+                if (tmpStr.equals("fail")) {
                     inTemp.setText("0");
                 }
                 else {
-                    inTemp.setText(tmp);
+                    inTemp.setText(tmpStr);
                     enable = true;
                 }
             }
@@ -202,15 +207,16 @@ public class MainActivity extends Activity {
             inTemp.setEnabled(enable);
         }
 
-        public void setOutTemp(String tmp) {
+        public void setOutTemp(float tmp) {
             TextView outTemp = (TextView)getView().findViewById(R.id.tv_outTemp);
             boolean enable = false;
+            String tmpStr = new String().valueOf((float)tmp / 10.0);
             if (null != outTemp) {
-                if (errorTempString == tmp) {
+                if (tmpStr.equals("fail")) {
                     outTemp.setText("0");
                 }
                 else {
-                    outTemp.setText(tmp);
+                    outTemp.setText(tmpStr);
                     enable = true;
                 }
             }
