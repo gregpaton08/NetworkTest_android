@@ -9,6 +9,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,6 +18,8 @@ import android.view.ViewGroup;
 import android.os.Build;
 import android.view.Window;
 import android.content.pm.ActivityInfo;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -39,7 +42,6 @@ public class MainActivity extends Activity {
 
     MainFragment m_mainFragment;
     private static final int errorTemp = -1111;
-    private static final String errorTempString = new String().valueOf(errorTemp);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,45 +59,68 @@ public class MainActivity extends Activity {
                     .add(R.id.container, m_mainFragment)
                     .commit();
         }
+
+//        EditText et_ip = m_mainFragment.getEditTextIpAddress();
+//        if (null != et_ip) {
+//            et_ip.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+//                @Override
+//                public boolean onEditorAction(TextView textView, int keyCode, KeyEvent keyEvent) {
+//                    if ((KeyEvent.ACTION_DOWN == keyEvent.getAction()) &&
+//                        (KeyEvent.KEYCODE_ENTER == keyCode)) {
+//                        InputMethodManager imm;
+//                    }
+//                    return false;
+//                }
+//            });
+//        }
     }
 
-    public void log(String str) {
+    private void log(String str) {
         Log.w("NetworkTest", str);
     }
 
     // Callback for Send button
     public void onClickSend(View view) {
+        updateWeather();
+    }
+
+    private boolean updateWeather() {
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
-            BackgroundTaskParams btp = new BackgroundTaskParams(m_mainFragment.getIpAddress(), 12345);
-            new BackgroundTask().execute(btp);
+            GetWeatherTaskParams gwtp = new GetWeatherTaskParams(m_mainFragment.getIpAddress(), 12345);
+            new GetWeatherTask().execute(gwtp);
         } else {
             Log.w("NetworkTest", "Network unavailable");
+            return false;
         }
+
+        return true;
     }
 
-    private  class BackgroundTaskParams {
+    private class GetWeatherTaskParams {
         String m_ipAddress;
         int m_port;
 
-        public BackgroundTaskParams() {
+        public GetWeatherTaskParams() {
             m_ipAddress = "";
             m_port = 0;
         }
 
-        public BackgroundTaskParams(String ipAddress, int port) {
+        public GetWeatherTaskParams(String ipAddress, int port) {
             m_ipAddress = ipAddress;
             m_port = port;
         }
     }
 
-    private class BackgroundTask extends AsyncTask<BackgroundTaskParams, Integer, String> {
-        protected String doInBackground(BackgroundTaskParams... btps) {
+    private class GetWeatherTask extends AsyncTask<GetWeatherTaskParams, Integer, String> {
+        protected String doInBackground(GetWeatherTaskParams... gwtps) {
             try {
                 // Open socket to server
-                Socket client = new Socket(btps[0].m_ipAddress, btps[0].m_port);
+                Socket client = new Socket(gwtps[0].m_ipAddress, gwtps[0].m_port);
+                if (null == client)
+                    return "fail";
 
                 // Get input and output streams
                 InputStream in = client.getInputStream();
@@ -164,10 +189,8 @@ public class MainActivity extends Activity {
         return temp;
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class MainFragment extends Fragment {
+
+    public class MainFragment extends Fragment {
 
         public MainFragment() {
         }
@@ -177,7 +200,36 @@ public class MainActivity extends Activity {
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
+            if (null == getView())
+                log("NULL View");
+            log("frag");
+
             return rootView;
+        }
+
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+
+            EditText et_ip = (EditText)getView().findViewById(R.id.et_ipAddress);
+            if (null != et_ip) {
+                et_ip.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                    @Override
+                    public boolean onEditorAction(TextView textView, int keyCode, KeyEvent keyEvent) {
+                        if (EditorInfo.IME_ACTION_DONE == keyCode) {
+                            textView.setCursorVisible(false);
+                        }
+                        return false;
+                    }
+                });
+            }
+
+            et_ip.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ((EditText)view).setCursorVisible(true);
+                }
+            });
         }
 
         public String getIpAddress() {
@@ -188,12 +240,12 @@ public class MainActivity extends Activity {
             return "";
         }
 
-        public void setInTemp(float tmp) {
+        public void setInTemp(int tmp) {
             TextView inTemp = (TextView)getView().findViewById(R.id.tv_inTemp);
             boolean enable = false;
             String tmpStr = new String().valueOf((float)tmp / 10.0);
             if (null != inTemp) {
-                if (tmpStr.equals("fail")) {
+                if (errorTemp == tmp) {
                     inTemp.setText("0");
                 }
                 else {
@@ -207,12 +259,12 @@ public class MainActivity extends Activity {
             inTemp.setEnabled(enable);
         }
 
-        public void setOutTemp(float tmp) {
+        public void setOutTemp(int tmp) {
             TextView outTemp = (TextView)getView().findViewById(R.id.tv_outTemp);
             boolean enable = false;
             String tmpStr = new String().valueOf((float)tmp / 10.0);
             if (null != outTemp) {
-                if (tmpStr.equals("fail")) {
+                if (errorTemp == tmp) {
                     outTemp.setText("0");
                 }
                 else {
