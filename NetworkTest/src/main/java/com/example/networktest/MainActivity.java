@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 import android.os.Build;
 import android.view.Window;
 import android.content.pm.ActivityInfo;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -36,7 +37,9 @@ import java.nio.charset.CharsetEncoder;
 
 public class MainActivity extends Activity {
 
-    TextView tv;
+    MainFragment m_mainFragment;
+    private static final int errorTemp = -1111;
+    private static final String errorTempString = new String().valueOf(errorTemp);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,28 +51,25 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        m_mainFragment = new MainFragment();
         if (savedInstanceState == null) {
             getFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, m_mainFragment)
                     .commit();
         }
+    }
 
-        tv = new TextView(getApplicationContext());
-        tv.setText("Hello");
-        ((FrameLayout) findViewById(R.id.container)).addView(tv);
+    public void log(String str) {
+        Log.w("NetworkTest", str);
     }
 
     // Callback for Send button
     public void onClickSend(View view) {
-        Log.w("NetworkText", "Send");
-        if (null != tv) {
-            tv.setText("Send");
-        }
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
-            BackgroundTaskParams btp = new BackgroundTaskParams("192.168.0.31", 12345);
+            BackgroundTaskParams btp = new BackgroundTaskParams(m_mainFragment.getIpAddress(), 12345);
             new BackgroundTask().execute(btp);
         } else {
             Log.w("NetworkTest", "Network unavailable");
@@ -111,14 +111,13 @@ public class MainActivity extends Activity {
                 buf[count] = '\0';
                 Charset charset = Charset.forName("UTF-8");
                 String weather = new String(buf, 0, count, charset);
-                Log.w("NetworkTest", weather);
                 return weather;
             }
             catch (IOException e) {
                 e.printStackTrace();
             }
 
-            return "Fail";
+            return errorTempString;
         }
 
         protected void onProgressUpdate(Integer... progress) {
@@ -132,18 +131,41 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            if (null != tv) {
-                tv.setText(result);
-            }
+            m_mainFragment.setInTemp(new String().valueOf(parseForInTemp(result)));
+            m_mainFragment.setOutTemp(new String().valueOf(parseForOutTemp(result)));
         }
+    }
+
+    float parseForInTemp(String tempStr) {
+        float temp = errorTemp;
+        try {
+            if (errorTempString != tempStr)
+                temp = Float.parseFloat(tempStr.substring(tempStr.indexOf("IT=") + 3,
+                                                          tempStr.length() - 1));
+        } catch (NumberFormatException nfe) {
+            nfe.printStackTrace();
+        }
+        return temp;
+    }
+
+    float parseForOutTemp(String tempStr) {
+        float temp = errorTemp;
+        try {
+            if (errorTempString != tempStr)
+                temp = Float.parseFloat(tempStr.substring(tempStr.indexOf("OT=") + 3,
+                                                          tempStr.indexOf("IT=") - 1));
+        } catch (NumberFormatException nfe) {
+            nfe.printStackTrace();
+        }
+        return temp;
     }
 
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment {
+    public static class MainFragment extends Fragment {
 
-        public PlaceholderFragment() {
+        public MainFragment() {
         }
 
         @Override
@@ -152,6 +174,50 @@ public class MainActivity extends Activity {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
             return rootView;
+        }
+
+        public String getIpAddress() {
+            EditText et_ip = (EditText)getView().findViewById(R.id.et_ipAddress);
+            if (null != et_ip)
+                return et_ip.getText().toString();
+
+            return "";
+        }
+
+        public void setInTemp(String tmp) {
+            TextView inTemp = (TextView)getView().findViewById(R.id.tv_inTemp);
+            boolean enable = false;
+            if (null != inTemp) {
+                if (errorTempString == tmp) {
+                    inTemp.setText("0");
+                }
+                else {
+                    inTemp.setText(tmp);
+                    enable = true;
+                }
+            }
+            else {
+                inTemp.setText("N/A");
+            }
+            inTemp.setEnabled(enable);
+        }
+
+        public void setOutTemp(String tmp) {
+            TextView outTemp = (TextView)getView().findViewById(R.id.tv_outTemp);
+            boolean enable = false;
+            if (null != outTemp) {
+                if (errorTempString == tmp) {
+                    outTemp.setText("0");
+                }
+                else {
+                    outTemp.setText(tmp);
+                    enable = true;
+                }
+            }
+            else {
+                outTemp.setText("N/A");
+            }
+            outTemp.setEnabled(enable);
         }
     }
 
