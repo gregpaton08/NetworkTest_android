@@ -20,6 +20,7 @@ import android.view.Window;
 import android.content.pm.ActivityInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -59,29 +60,10 @@ public class MainActivity extends Activity {
                     .add(R.id.container, m_mainFragment)
                     .commit();
         }
-
-//        EditText et_ip = m_mainFragment.getEditTextIpAddress();
-//        if (null != et_ip) {
-//            et_ip.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-//                @Override
-//                public boolean onEditorAction(TextView textView, int keyCode, KeyEvent keyEvent) {
-//                    if ((KeyEvent.ACTION_DOWN == keyEvent.getAction()) &&
-//                        (KeyEvent.KEYCODE_ENTER == keyCode)) {
-//                        InputMethodManager imm;
-//                    }
-//                    return false;
-//                }
-//            });
-//        }
     }
 
     private void log(String str) {
         Log.w("NetworkTest", str);
-    }
-
-    // Callback for Send button
-    public void onClickSend(View view) {
-        updateWeather();
     }
 
     private boolean updateWeather() {
@@ -119,8 +101,6 @@ public class MainActivity extends Activity {
             try {
                 // Open socket to server
                 Socket client = new Socket(gwtps[0].m_ipAddress, gwtps[0].m_port);
-                if (null == client)
-                    return "fail";
 
                 // Get input and output streams
                 InputStream in = client.getInputStream();
@@ -135,8 +115,7 @@ public class MainActivity extends Activity {
                 int count = in.read(buf);
                 buf[count] = '\0';
                 Charset charset = Charset.forName("UTF-8");
-                String weather = new String(buf, 0, count, charset);
-                return weather;
+                return new String(buf, 0, count, charset);
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -210,24 +189,33 @@ public class MainActivity extends Activity {
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
-
-            EditText et_ip = (EditText)getView().findViewById(R.id.et_ipAddress);
+            EditText et_ip = null;
+            View view = getView();
+            if (null != view)
+                et_ip = (EditText)getView().findViewById(R.id.et_ipAddress);
             if (null != et_ip) {
-                et_ip.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                    @Override
-                    public boolean onEditorAction(TextView textView, int keyCode, KeyEvent keyEvent) {
-                        if (EditorInfo.IME_ACTION_DONE == keyCode) {
-                            textView.setCursorVisible(false);
-                        }
-                        return false;
-                    }
-                });
+//                et_ip.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+//                    @Override
+//                    public boolean onEditorAction(TextView textView, int keyCode, KeyEvent keyEvent) {
+//                        if (EditorInfo.IME_ACTION_DONE == keyCode) {
+//                            textView.setCursorVisible(false);
+//                        }
+//                        return false;
+//                    }
+//                });
+//
+//                et_ip.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View view) {
+//                        ((EditText)view).setCursorVisible(true);
+//                    }
+//                });
             }
 
-            et_ip.setOnClickListener(new View.OnClickListener() {
+            ((Button)findViewById(R.id.bt_send)).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    ((EditText)view).setCursorVisible(true);
+                    updateWeather();
                 }
             });
         }
