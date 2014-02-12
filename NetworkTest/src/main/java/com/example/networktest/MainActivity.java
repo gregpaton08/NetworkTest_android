@@ -4,11 +4,15 @@ import android.app.Activity;
 import android.app.ActionBar;
 import android.app.Fragment;
 import android.content.Context;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,12 +22,17 @@ import android.view.ViewGroup;
 import android.os.Build;
 import android.view.Window;
 import android.content.pm.ActivityInfo;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
+import android.widget.ViewSwitcher;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -38,6 +47,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.security.PrivateKey;
 
 public class MainActivity extends Activity {
 
@@ -171,6 +181,9 @@ public class MainActivity extends Activity {
 
     public class MainFragment extends Fragment {
 
+        private TextSwitcher m_tsInTemp;
+        private TextSwitcher m_tsOutTemp;
+
         public MainFragment() {
         }
 
@@ -178,10 +191,6 @@ public class MainActivity extends Activity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
-            if (null == getView())
-                log("NULL View");
-            log("frag");
 
             return rootView;
         }
@@ -194,22 +203,22 @@ public class MainActivity extends Activity {
             if (null != view)
                 et_ip = (EditText)getView().findViewById(R.id.et_ipAddress);
             if (null != et_ip) {
-//                et_ip.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-//                    @Override
-//                    public boolean onEditorAction(TextView textView, int keyCode, KeyEvent keyEvent) {
-//                        if (EditorInfo.IME_ACTION_DONE == keyCode) {
-//                            textView.setCursorVisible(false);
-//                        }
-//                        return false;
-//                    }
-//                });
-//
-//                et_ip.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View view) {
-//                        ((EditText)view).setCursorVisible(true);
-//                    }
-//                });
+                et_ip.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                    @Override
+                    public boolean onEditorAction(TextView textView, int keyCode, KeyEvent keyEvent) {
+                        if (EditorInfo.IME_ACTION_DONE == keyCode) {
+                            textView.setCursorVisible(false);
+                        }
+                        return false;
+                    }
+                });
+
+                et_ip.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        ((EditText)view).setCursorVisible(true);
+                    }
+                });
             }
 
             ((Button)findViewById(R.id.bt_send)).setOnClickListener(new View.OnClickListener() {
@@ -218,6 +227,40 @@ public class MainActivity extends Activity {
                     updateWeather();
                 }
             });
+
+            m_tsInTemp = (TextSwitcher)findViewById(R.id.ts_inTemp);
+            m_tsInTemp.setFactory(new ViewSwitcher.ViewFactory() {
+                @Override
+                public View makeView() {
+                    TextView tv = new TextView(getActivity());
+                    tv.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+                    tv.setTextSize(50);
+                    tv.setTextColor(Color.BLACK);
+                    return tv;
+                }
+            });
+
+            m_tsOutTemp = (TextSwitcher)findViewById(R.id.ts_outTemp);
+            m_tsOutTemp.setFactory(new ViewSwitcher.ViewFactory() {
+                @Override
+                public View makeView() {
+                    TextView tv = new TextView(getActivity());
+                    tv.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+                    tv.setTextSize(50);
+                    tv.setTextColor(Color.BLACK);
+                    return tv;
+                }
+            });
+
+            // Declare the in and out animations and initialize them
+            Animation in = AnimationUtils.loadAnimation(getActivity(), android.R.anim.slide_in_left);
+            Animation out = AnimationUtils.loadAnimation(getActivity(),android.R.anim.slide_out_right);
+
+            // set the animation type of textSwitcher
+            m_tsInTemp.setInAnimation(in);
+            m_tsInTemp.setOutAnimation(out);
+            m_tsOutTemp.setInAnimation(in);
+            m_tsOutTemp.setOutAnimation(out);
         }
 
         public String getIpAddress() {
@@ -229,41 +272,47 @@ public class MainActivity extends Activity {
         }
 
         public void setInTemp(int tmp) {
-            TextView inTemp = (TextView)getView().findViewById(R.id.tv_inTemp);
+            //TextView inTemp = (TextView)getView().findViewById(R.id.tv_inTemp);
             boolean enable = false;
             String tmpStr = new String().valueOf((float)tmp / 10.0);
-            if (null != inTemp) {
+            //if (null != inTemp) {
                 if (errorTemp == tmp) {
-                    inTemp.setText("0");
+                    m_tsInTemp.setText("0");
+                    //inTemp.setText("0");
                 }
                 else {
-                    inTemp.setText(tmpStr);
+                    m_tsInTemp.setText(tmpStr);
+                    //inTemp.setText(tmpStr);
                     enable = true;
                 }
-            }
-            else {
-                inTemp.setText("N/A");
-            }
-            inTemp.setEnabled(enable);
+//            }
+//            else {
+//                m_tsInTemp.setText("N/A");
+//                //inTemp.setText("N/A");
+//            }
+//            inTemp.setEnabled(enable);
         }
 
         public void setOutTemp(int tmp) {
-            TextView outTemp = (TextView)getView().findViewById(R.id.tv_outTemp);
+            //TextView outTemp = (TextView)getView().findViewById(R.id.tv_outTemp);
             boolean enable = false;
             String tmpStr = new String().valueOf((float)tmp / 10.0);
-            if (null != outTemp) {
+            //if (null != outTemp) {
                 if (errorTemp == tmp) {
-                    outTemp.setText("0");
+                    m_tsOutTemp.setText("0");
+                    //outTemp.setText("0");
                 }
                 else {
-                    outTemp.setText(tmpStr);
+                    m_tsOutTemp.setText(tmpStr);
+                    //outTemp.setText(tmpStr);
                     enable = true;
                 }
-            }
-            else {
-                outTemp.setText("N/A");
-            }
-            outTemp.setEnabled(enable);
+//            }
+//            else {
+//                m_tsOutTemp.setText("N/A");
+//                //outTemp.setText("N/A");
+//            }
+            m_tsOutTemp.setEnabled(enable);
         }
     }
 

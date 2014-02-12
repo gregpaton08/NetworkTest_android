@@ -14,37 +14,37 @@
         android:layout_height="wrap_content"
         android:text="Send" />
 
-    <TextView
-        android:id="@+id/tv_inTemp"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:layout_centerVertical="true"
-        android:text="0"
-        android:enabled="false"
-        android:textSize="50dp"/>
+    <!--<TextView-->
+        <!--android:id="@+id/tv_inTemp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_centerVertical="true"-->
+        <!--android:text="0"-->
+        <!--android:enabled="false"-->
+        <!--android:textSize="50dp" />-->
 
     <TextView
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:text="In"
-        android:layout_above="@+id/tv_inTemp"
+        android:layout_above="@+id/ts_inTemp"
         android:textSize="30dp" />
 
-    <TextView
-        android:id="@+id/tv_outTemp"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_alignParentRight="true"
-        android:text="0"
-        android:enabled="false"
-        android:textSize="50dp"/>
+    <!--<TextView-->
+        <!--android:id="@+id/tv_outTemp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_centerVertical="true"-->
+        <!--android:layout_alignParentRight="true"-->
+        <!--android:text="0"-->
+        <!--android:enabled="false"-->
+        <!--android:textSize="50dp"/>-->
 
     <TextView
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:text="Out"
-        android:layout_above="@+id/tv_outTemp"
+        android:layout_above="@+id/ts_outTemp"
         android:layout_alignParentRight="true"
         android:textSize="30dp" />
 
@@ -58,5 +58,26 @@
         android:inputType="text"
         android:gravity="right"
         android:cursorVisible="false" />
+
+    <TextSwitcher
+        android:layout_marginTop="50dp"
+        android:id="@+id/ts_inTemp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:text="0"
+        android:enabled="false"
+        android:textSize="50dp" />
+
+    <TextSwitcher
+        android:layout_marginTop="50dp"
+        android:id="@+id/ts_outTemp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:text="0"
+        android:enabled="false"
+        android:textSize="50dp" />
 
 </RelativeLayout>
