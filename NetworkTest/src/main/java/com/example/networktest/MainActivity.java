@@ -172,6 +172,9 @@ public class MainActivity extends Activity {
             else {
                 inTemp = m_cachedTemp.getInt(IN_TEMP, ERROR_TEMP);
                 outTemp = m_cachedTemp.getInt(OUT_TEMP, ERROR_TEMP);
+                long time = m_cachedTemp.getLong(TIME_TEMP, 0);
+                if (0 != time)
+                    m_mainFragment.setTimeTemp(time);
             }
             // Set temperature in view
             m_mainFragment.setInTemp(inTemp);
@@ -211,6 +214,7 @@ public class MainActivity extends Activity {
 
         private TextSwitcher m_tsInTemp;
         private TextSwitcher m_tsOutTemp;
+        private TextView m_tvTimeTemp;
 
         public MainFragment() {
         }
@@ -256,6 +260,7 @@ public class MainActivity extends Activity {
                 }
             });
 
+            m_tvTimeTemp = (TextView)findViewById(R.id.tv_timeTemp);
             m_tsInTemp = (TextSwitcher)findViewById(R.id.ts_inTemp);
             m_tsInTemp.setFactory(new ViewSwitcher.ViewFactory() {
                 @Override
@@ -326,6 +331,12 @@ public class MainActivity extends Activity {
                 enable = true;
             }
             m_tsOutTemp.setEnabled(enable);
+        }
+
+        public void setTimeTemp(long time) {
+            Date date = new Date(time);
+            String timeTempStr = "as of " + date.toString();
+            m_tvTimeTemp.setText(timeTempStr);
         }
     }
 

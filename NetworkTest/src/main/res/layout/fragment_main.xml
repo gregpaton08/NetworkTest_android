@@ -55,4 +55,12 @@
         android:layout_alignParentRight="true"
         android:textSize="30dp" />
 
+    <TextView
+        android:id="@+id/tv_timeTemp"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_below="@id/ts_inTemp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp" />
+
 </RelativeLayout>
