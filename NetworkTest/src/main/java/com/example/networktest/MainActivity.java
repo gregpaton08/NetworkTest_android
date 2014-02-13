@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ActionBar;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -48,11 +49,18 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.security.PrivateKey;
+import java.util.Date;
 
 public class MainActivity extends Activity {
 
     MainFragment m_mainFragment;
-    private static final int errorTemp = -1111;
+    private static final int ERROR_TEMP = -1111;
+    private SharedPreferences m_cachedTemp;
+    private static final String FAIL = "FAIL";
+    private static final String CACHED_TEMP = "CACHED_TEMP";
+    private static final String IN_TEMP = "IN_TEMP";
+    private static final String OUT_TEMP = "OUT_TEMP";
+    private static final String TIME_TEMP = "TIME_TEMP";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +78,9 @@ public class MainActivity extends Activity {
                     .add(R.id.container, m_mainFragment)
                     .commit();
         }
+
+        m_cachedTemp = getSharedPreferences(CACHED_TEMP, 0);
+        SharedPreferences.Editor editor = m_cachedTemp.edit();
     }
 
     private void log(String str) {
@@ -146,13 +157,30 @@ public class MainActivity extends Activity {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             log(result);
-            m_mainFragment.setInTemp(parseForInTemp(result));
-            m_mainFragment.setOutTemp(parseForOutTemp(result));
+            int inTemp;
+            int outTemp;
+            if (false == result.equals(FAIL)) {
+                // Parse temperatures from result string
+                inTemp = parseForInTemp(result);
+                outTemp = parseForOutTemp(result);
+                // Cache the current temperature and time
+                SharedPreferences.Editor editor = m_cachedTemp.edit();
+                editor.putInt(IN_TEMP, inTemp);
+                editor.putInt(OUT_TEMP, outTemp);
+                editor.putLong(TIME_TEMP, System.currentTimeMillis());
+            }
+            else {
+                inTemp = m_cachedTemp.getInt(IN_TEMP, ERROR_TEMP);
+                outTemp = m_cachedTemp.getInt(OUT_TEMP, ERROR_TEMP);
+            }
+            // Set temperature in view
+            m_mainFragment.setInTemp(inTemp);
+            m_mainFragment.setOutTemp(outTemp);
         }
     }
 
     int parseForInTemp(String tempStr) {
-        int temp = errorTemp;
+        int temp = ERROR_TEMP;
         try {
             if (false == tempStr.equals("fail")) {
                 // TODO: Remove junk from end of string and remove '- 1' from subString()
@@ -166,7 +194,7 @@ public class MainActivity extends Activity {
     }
 
     int parseForOutTemp(String tempStr) {
-        int temp = errorTemp;
+        int temp = ERROR_TEMP;
         try {
             if (false == tempStr.equals("fail")) {
                 temp = (int)(Float.parseFloat(tempStr.substring(tempStr.indexOf("OT=") + 3,
@@ -261,6 +289,9 @@ public class MainActivity extends Activity {
             m_tsInTemp.setOutAnimation(out);
             m_tsOutTemp.setInAnimation(in);
             m_tsOutTemp.setOutAnimation(out);
+
+            m_tsInTemp.setCurrentText("-");
+            m_tsOutTemp.setCurrentText("-");
         }
 
         public String getIpAddress() {
@@ -272,46 +303,28 @@ public class MainActivity extends Activity {
         }
 
         public void setInTemp(int tmp) {
-            //TextView inTemp = (TextView)getView().findViewById(R.id.tv_inTemp);
             boolean enable = false;
-            String tmpStr = new String().valueOf((float)tmp / 10.0);
-            //if (null != inTemp) {
-                if (errorTemp == tmp) {
-                    m_tsInTemp.setText("0");
-                    //inTemp.setText("0");
-                }
-                else {
-                    m_tsInTemp.setText(tmpStr);
-                    //inTemp.setText(tmpStr);
-                    enable = true;
-                }
-//            }
-//            else {
-//                m_tsInTemp.setText("N/A");
-//                //inTemp.setText("N/A");
-//            }
-//            inTemp.setEnabled(enable);
+            String tmpStr = String.valueOf((float)tmp / 10.0);
+            if (ERROR_TEMP == tmp) {
+                m_tsInTemp.setText("-");
+            }
+            else {
+                m_tsInTemp.setText(tmpStr);
+                enable = true;
+            }
+            m_tsInTemp.setEnabled(enable);
         }
 
         public void setOutTemp(int tmp) {
-            //TextView outTemp = (TextView)getView().findViewById(R.id.tv_outTemp);
             boolean enable = false;
-            String tmpStr = new String().valueOf((float)tmp / 10.0);
-            //if (null != outTemp) {
-                if (errorTemp == tmp) {
-                    m_tsOutTemp.setText("0");
-                    //outTemp.setText("0");
-                }
-                else {
-                    m_tsOutTemp.setText(tmpStr);
-                    //outTemp.setText(tmpStr);
-                    enable = true;
-                }
-//            }
-//            else {
-//                m_tsOutTemp.setText("N/A");
-//                //outTemp.setText("N/A");
-//            }
+            String tmpStr = String.valueOf((float)tmp / 10.0);
+            if (ERROR_TEMP == tmp) {
+                m_tsOutTemp.setText("-");
+            }
+            else {
+                m_tsOutTemp.setText(tmpStr);
+                enable = true;
+            }
             m_tsOutTemp.setEnabled(enable);
         }
     }

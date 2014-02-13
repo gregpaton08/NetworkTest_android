@@ -14,40 +14,6 @@
         android:layout_height="wrap_content"
         android:text="Send" />
 
-    <!--<TextView-->
-        <!--android:id="@+id/tv_inTemp"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_centerVertical="true"-->
-        <!--android:text="0"-->
-        <!--android:enabled="false"-->
-        <!--android:textSize="50dp" />-->
-
-    <TextView
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:text="In"
-        android:layout_above="@+id/ts_inTemp"
-        android:textSize="30dp" />
-
-    <!--<TextView-->
-        <!--android:id="@+id/tv_outTemp"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_centerVertical="true"-->
-        <!--android:layout_alignParentRight="true"-->
-        <!--android:text="0"-->
-        <!--android:enabled="false"-->
-        <!--android:textSize="50dp"/>-->
-
-    <TextView
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:text="Out"
-        android:layout_above="@+id/ts_outTemp"
-        android:layout_alignParentRight="true"
-        android:textSize="30dp" />
-
     <EditText
         android:id="@+id/et_ipAddress"
         android:layout_height="wrap_content"
@@ -60,24 +26,33 @@
         android:cursorVisible="false" />
 
     <TextSwitcher
-        android:layout_marginTop="50dp"
         android:id="@+id/ts_inTemp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:text="0"
-        android:enabled="false"
-        android:textSize="50dp" />
+        android:enabled="false" />
+
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="In"
+        android:layout_above="@+id/ts_inTemp"
+        android:textSize="30dp" />
 
     <TextSwitcher
-        android:layout_marginTop="50dp"
         android:id="@+id/ts_outTemp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
-        android:text="0"
-        android:enabled="false"
-        android:textSize="50dp" />
+        android:enabled="false" />
+
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="Out"
+        android:layout_above="@+id/ts_outTemp"
+        android:layout_alignParentRight="true"
+        android:textSize="30dp" />
 
 </RelativeLayout>
