@@ -9,10 +9,10 @@
     tools:context=".MainActivity$PlaceholderFragment">
 
     <Button
-        android:id="@+id/bt_send"
+        android:id="@+id/bt_refresh"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Send" />
+        android:text="Refresh" />
 
     <EditText
         android:id="@+id/et_ipAddress"
