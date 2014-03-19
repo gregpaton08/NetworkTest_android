@@ -75,6 +75,7 @@ public class MainActivity extends Activity {
         private TextSwitcher m_tsOutTemp;
         private TextView m_tvTimeTemp;
 
+
         public MainFragment() {
         }
 
@@ -172,11 +173,13 @@ public class MainActivity extends Activity {
             ConnectivityManager connMgr = (ConnectivityManager)
                     getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-            if (networkInfo != null && networkInfo.isConnected()) {
+            if (networkInfo != null && networkInfo.isConnected() && ConnectivityManager.TYPE_WIFI == networkInfo.getType()) {
                 GetWeatherTaskParams gwtp = new GetWeatherTaskParams(m_mainFragment.getIpAddress(), 12345);
                 new GetWeatherTask().execute(gwtp);
-            } else {
-                log("Network unavailable");
+            }
+            else {
+                log("WIFI unavailable");
+                setCachedTemp();
                 return false;
             }
 
@@ -189,6 +192,16 @@ public class MainActivity extends Activity {
                 return et_ip.getText().toString();
 
             return "";
+        }
+
+        public void setCachedTemp() {
+            int inTemp = m_cachedTemp.getInt(IN_TEMP, ERROR_TEMP);
+            int outTemp = m_cachedTemp.getInt(OUT_TEMP, ERROR_TEMP);
+            long time = m_cachedTemp.getLong(TIME_TEMP, 0);
+
+            setInTemp(inTemp);
+            setOutTemp(outTemp);
+            setTimeTemp(time);
         }
 
         public void setInTemp(int tmp) {
@@ -311,22 +324,22 @@ public class MainActivity extends Activity {
                     // Parse temperatures from result string
                     inTemp = parseForInTemp(result);
                     outTemp = parseForOutTemp(result);
+
                     // Cache the current temperature and time
                     SharedPreferences.Editor editor = m_cachedTemp.edit();
                     editor.putInt(IN_TEMP, inTemp);
                     editor.putInt(OUT_TEMP, outTemp);
                     editor.putLong(TIME_TEMP, System.currentTimeMillis());
+                    editor.commit();
+
+                    // Set temperature in view
+                    setInTemp(inTemp);
+                    setOutTemp(outTemp);
                 }
                 else {
-                    inTemp = m_cachedTemp.getInt(IN_TEMP, ERROR_TEMP);
-                    outTemp = m_cachedTemp.getInt(OUT_TEMP, ERROR_TEMP);
-                    long time = m_cachedTemp.getLong(TIME_TEMP, 0);
-                    if (0 != time)
-                        m_mainFragment.setTimeTemp(time);
+                    // If fail to get temp then display most recent values
+                    setCachedTemp();
                 }
-                // Set temperature in view
-                m_mainFragment.setInTemp(inTemp);
-                m_mainFragment.setOutTemp(outTemp);
             }
         }
     }
