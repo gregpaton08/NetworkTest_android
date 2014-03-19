@@ -194,6 +194,20 @@ public class MainActivity extends Activity {
             return "";
         }
 
+        public void setTemp(int inTemp, int outTemp) {
+            // Cache the current temperature and time
+            SharedPreferences.Editor editor = m_cachedTemp.edit();
+            editor.putInt(IN_TEMP, inTemp);
+            editor.putInt(OUT_TEMP, outTemp);
+            editor.putLong(TIME_TEMP, System.currentTimeMillis());
+            editor.commit();
+
+            // Set temperature in view
+            setInTemp(inTemp);
+            setOutTemp(outTemp);
+            m_tvTimeTemp.setText("");
+        }
+
         public void setCachedTemp() {
             int inTemp = m_cachedTemp.getInt(IN_TEMP, ERROR_TEMP);
             int outTemp = m_cachedTemp.getInt(OUT_TEMP, ERROR_TEMP);
@@ -325,16 +339,7 @@ public class MainActivity extends Activity {
                     inTemp = parseForInTemp(result);
                     outTemp = parseForOutTemp(result);
 
-                    // Cache the current temperature and time
-                    SharedPreferences.Editor editor = m_cachedTemp.edit();
-                    editor.putInt(IN_TEMP, inTemp);
-                    editor.putInt(OUT_TEMP, outTemp);
-                    editor.putLong(TIME_TEMP, System.currentTimeMillis());
-                    editor.commit();
-
-                    // Set temperature in view
-                    setInTemp(inTemp);
-                    setOutTemp(outTemp);
+                    setTemp(inTemp, outTemp);
                 }
                 else {
                     // If fail to get temp then display most recent values
