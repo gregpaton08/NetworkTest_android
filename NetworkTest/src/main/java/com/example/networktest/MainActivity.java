@@ -113,13 +113,6 @@ public class MainActivity extends Activity {
                 });
             }
 
-            ((Button)findViewById(R.id.bt_refresh)).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    updateWeather();
-                }
-            });
-
             m_tvTimeTemp = (TextView)findViewById(R.id.tv_timeTemp);
             m_tsInTemp = (TextSwitcher)findViewById(R.id.ts_inTemp);
             m_tsInTemp.setFactory(new ViewSwitcher.ViewFactory() {
